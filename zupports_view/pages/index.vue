@@ -76,14 +76,21 @@ export default {
   },
   methods: {
     async search() {
-      const response = await this.$axios.get(`${this.keyword}`)
-        .then((response) => {
-          this.restaurants = response.data.results;
-        })
-        .catch((error) => {
-          console.log(error);
-        });
-      console.log(this.restaurants)
+      const cachedResult = sessionStorage.getItem(this.keyword);
+      // รับค่า this.keyword 
+      if (cachedResult) {
+        //ตรวจสอบว่ามีข้อมูล cachedResult ถ้ามีให้ return ข้อมูลออกไปเลยไม่ต้องเรียก API ใหม่
+        this.restaurants = JSON.parse(cachedResult);
+        return;
+      }
+      try {
+        //หากไม่มีผลลัพธ์การค้นหาที่ถูก cache ไว้ใน sessionStorage จะส่ง request ไปที่ API และ set ค่า cachedResult เก็บไว้
+        const response = await this.$axios.get(`${this.keyword}`);
+        this.restaurants = response.data.results;
+        sessionStorage.setItem(this.keyword, JSON.stringify(this.restaurants));
+      } catch (error) {
+        console.log(error);
+      }
 
     },
   },
